@@ -53,3 +53,13 @@ private:
 //对象的初始化
 CClassInstanceHeap*  CClassInstanceHeap::m_pIns  = new CClassInstanceHeap;
 CClassInstanceHeap::GC CClassInstanceHeap::m_gc;
+
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+    //具有垃圾回收功能
+	CClassInstanceHeap::GetInstance()->print_log();
+    return 0;
+}
+
+
