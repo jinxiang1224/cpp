@@ -22,15 +22,16 @@
       }
 
 private:
-     class GA
+     // 是CClassInstanceHeap的辅助类，用于资源的释放
+     class GC
      {
      public:
-         GA()
+         GC()
          {
              std::cout << "ga construct \n";
          }
 
-         ~GA()
+         ~GC()
          {
            std::cout << "ga delete instance \n";
            if (m_pIns != NULL)
@@ -44,5 +45,10 @@ private:
       
  private:
      static  CClassInstanceHeap* m_pIns;
-     static  GA m_ga;
+     static  GC m_gc;
  };
+
+//懒汉式 避免了多线程竞争问题   
+//对象的初始化
+CClassInstanceHeap*  CClassInstanceHeap::m_pIns  = new CClassInstanceHeap;
+CClassInstanceHeap::GC CClassInstanceHeap::m_gc;
