@@ -1,4 +1,5 @@
   //类只能在堆上实例化
+  //1、如何设计类只能建立在堆上&单例模式只有一个模式
  class CClassInstanceHeap
  {
  private:
@@ -34,7 +35,7 @@ private:
          ~GC()
          {
            //析构时释放资源
-		   std::cout << "ga delete instance \n";
+            std::cout << "ga delete instance \n";
            if (m_pIns != NULL)
            {
                delete m_pIns;
@@ -55,7 +56,7 @@ CClassInstanceHeap*  CClassInstanceHeap::m_pIns  = new CClassInstanceHeap;
 CClassInstanceHeap::GC CClassInstanceHeap::m_gc;
 
 
-
+//2、如何设计类只能建立在栈
  class CClassInstanceStack
  {
  public:
