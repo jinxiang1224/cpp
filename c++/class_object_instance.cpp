@@ -90,13 +90,13 @@ CClassInstanceHeap::GC CClassInstanceHeap::m_gc;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	//具有垃圾回收功能
-	CClassInstanceHeap::GetInstance()->print_log();
+    //具有垃圾回收功能
+    CClassInstanceHeap::GetInstance()->print_log();
 
-	//无法访问 operate new[]运算符
-	//CClassInstanceStack* pStack = new CClassInstanceStack[10];
-	CClassInstanceStack  stack;
-	stack.print_log();
+    //无法访问 operate new[]运算符
+    //CClassInstanceStack* pStack = new CClassInstanceStack[10];
+    CClassInstanceStack  stack;
+    stack.print_log();
 
     return 0;
 }
