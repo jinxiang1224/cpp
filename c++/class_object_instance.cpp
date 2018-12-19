@@ -55,10 +55,49 @@ CClassInstanceHeap*  CClassInstanceHeap::m_pIns  = new CClassInstanceHeap;
 CClassInstanceHeap::GC CClassInstanceHeap::m_gc;
 
 
+
+ class CClassInstanceStack
+ {
+ public:
+     CClassInstanceStack()
+     {
+         std::cout << "call construct function\n";
+     }
+
+     ~CClassInstanceStack()
+     {
+         std::cout << "call destruction function\n";
+     }
+
+     void print_log()
+     {
+         std::cout << "call print log\n";
+     }
+
+ private:
+     //外部禁止调用 new运算符 
+     void* operator new(std::size_t count)
+     {
+
+     }
+
+     void* operator new[](std::size_t count)
+     {
+
+     }
+ };
+
+
 int _tmain(int argc, _TCHAR* argv[])
 {
     //具有垃圾回收功能
 	CClassInstanceHeap::GetInstance()->print_log();
+	
+	//无法访问 operate new[]运算符
+    //CClassInstanceStack* pStack = new CClassInstanceStack[10];
+    CClassInstanceStack  stack;
+    stack.print_log();
+	
     return 0;
 }
 
