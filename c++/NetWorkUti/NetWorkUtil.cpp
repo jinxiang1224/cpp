@@ -1,11 +1,12 @@
-
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <stdio.h>
 #include <stdlib.h>
-// Link with Iphlpapi.lib
-#include "./NetWorkUtil.h"
-#pragma comment(lib, "IPHLPAPI.lib")
+#include "NetWorkUtil.h"
+#include <tchar.h>
+#pragma comment(lib, "IPHLPAPI.lib")   
+#pragma comment(lib, "ws2_32.lib") 
+
 
 
 
@@ -40,7 +41,7 @@ bool CNetWorkUtil::GetLocalIPList(std::vector<std::string>& vecIP)
         return false;
     }
 
-    //3.è·å–ä¸»æœºip
+    //3.»ñÈ¡Ö÷»úip
     HOSTENT* host = gethostbyname(hostname);
     if (host == NULL || host->h_addr_list[0] == NULL)
     {
@@ -50,7 +51,7 @@ bool CNetWorkUtil::GetLocalIPList(std::vector<std::string>& vecIP)
 
     in_addr addr;
     int i = 0;
-    //4.è½¬åŒ–ä¸ºchar*å¹¶æ‹·è´è¿”å›
+    //4.×ª»¯Îªchar*²¢¿½±´·µ»Ø
     while (host->h_addr_list[i] != NULL)
     {
         addr.s_addr = *(u_long*)host->h_addr_list[i];
@@ -72,7 +73,7 @@ bool CNetWorkUtil::GetLocalIPList(std::vector<std::string>& vecIP)
 
 
 
-//é€šè¿‡GetAdaptersAddresseså‡½æ•°ï¼ˆé€‚ç”¨äºWindows XPåŠä»¥ä¸Šç‰ˆæœ¬ï¼‰
+//Í¨¹ıGetAdaptersAddressesº¯Êı£¨ÊÊÓÃÓÚWindows XP¼°ÒÔÉÏ°æ±¾£©
 bool CNetWorkUtil::GetLocalMACList(std::vector<std::string>& vecMac)
 {
     bool ret = false;
@@ -100,7 +101,7 @@ bool CNetWorkUtil::GetLocalMACList(std::vector<std::string>& vecMac)
         // If successful, output some information from the data we received
         for (PIP_ADAPTER_ADDRESSES pCurrAddresses = pAddresses; pCurrAddresses != NULL; pCurrAddresses = pCurrAddresses->Next)
         {
-            // ç¡®ä¿MACåœ°å€çš„é•¿åº¦ä¸º 00-00-00-00-00-00
+            // È·±£MACµØÖ·µÄ³¤¶ÈÎª 00-00-00-00-00-00
             if (pCurrAddresses->PhysicalAddressLength != 6)
             {
                 continue;
@@ -126,26 +127,26 @@ bool CNetWorkUtil::GetLocalMACList(std::vector<std::string>& vecMac)
 }
 
 //********************************************
-// å‡½æ•°å:	
-// åŠŸ  èƒ½:	æ£€æŸ¥æ˜¯å¦åˆæ³•çš„å­ç½‘æ©ç 
-// è¿”å›å€¼:  
-// å‚  æ•°: 	
-// å¤‡  æ³¨ï¼š
+// º¯ÊıÃû:	
+// ¹¦  ÄÜ:	¼ì²éÊÇ·ñºÏ·¨µÄ×ÓÍøÑÚÂë
+// ·µ»ØÖµ:  
+// ²Î  Êı: 	
+// ±¸  ×¢£º
 //********************************************
 bool CNetWorkUtil::isValidSubmask(const std::string& strSubmask)
 {
-    //éªŒè¯æ˜¯å¦åˆæ³•IP
+    //ÑéÖ¤ÊÇ·ñºÏ·¨IP
     if (!isValidIP(strSubmask))
     {
         return false;
     }
 
-    //è½¬æ¢unsing long æ•´å‹ å¹¶ä¸”è½¬åŒ–å¤§ç«¯æ¨¡å¼æ‰ç¬¦åˆç®—æ³•è¦æ±‚
+    //×ª»»unsing long ÕûĞÍ ²¢ÇÒ×ª»¯´ó¶ËÄ£Ê½²Å·ûºÏËã·¨ÒªÇó
     unsigned long  ulSubmask =  htonl(inet_addr(strSubmask.c_str()));
 
-    //å–å & (å–å+1)
-    //åˆæ³•ï¼š11111111 11111111 11111100 00000000 11..1è¿ç»­
-    //éæ³•ï¼š111111111111111111111111111001111
+    //È¡·´ & (È¡·´+1)
+    //ºÏ·¨£º11111111 11111111 11111100 00000000 11..1Á¬Ğø
+    //·Ç·¨£º111111111111111111111111111001111
 
     return ((~ulSubmask + 1) & ~ulSubmask) == 0;
 }
@@ -178,7 +179,7 @@ bool CNetWorkUtil::isValidIP(const std::string& strIP)
             return false;
         }
 
-        //é˜²æ­¢å¼‚å¸¸ï¼Œå¯¼è‡´æ­»å¾ªç¯
+        //·ÀÖ¹Òì³££¬µ¼ÖÂËÀÑ­»·
         if (vecIPElement.size() > 4)
         {
             return false;
