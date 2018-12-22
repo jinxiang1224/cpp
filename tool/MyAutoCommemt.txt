@@ -36,36 +36,7 @@ Public Module MyAutoCommemt  '这里要与保存的Module文件名保持一致�
         DTE.ActiveDocument.Selection.GotoLine(10)
     End Sub
 
-    ' --------------------------------------------------
-    ' 生成函数说明注释
-    ' --------------------------------------------------
-    Sub FunctionRemark()
-        Dim preSpaceCount As Integer = 0   ' 注释前面的空格数, 缩进（单位：字符）
-        Dim outTextDoc As TextDocument
-        Dim outText As EditPoint
-        Dim iCurrentLineNumber As Integer
 
-        iCurrentLineNumber = DTE.ActiveDocument.Selection.CurrentLine '.ToString()
-        outTextDoc = DTE.ActiveDocument.Object("TextDocument")
-        outText = outTextDoc.StartPoint.CreateEditPoint()
-        ' 移动文本输入点到指定行上
-        outText.MoveToLineAndOffset(iCurrentLineNumber, 1)
-        Dim strSpace As String = ""
-        Dim iSpaceIndex As Integer
-        For iSpaceIndex = 1 To preSpaceCount
-            strSpace = strSpace + " "
-        Next
-        outText.Insert(strSpace + "/**************************************************************" + vbCrLf)
-        outText.Insert(strSpace + "* 函数名称：" + vbCrLf)
-        outText.Insert(strSpace + "*     " + vbCrLf)
-        outText.Insert(strSpace + "* 参数：" + vbCrLf)
-        outText.Insert(strSpace + "*    - " + vbCrLf)
-        outText.Insert(strSpace + "* 返回：" + vbCrLf)
-        outText.Insert(strSpace + "*     " + vbCrLf)
-        outText.Insert(strSpace + "* 说明：" + vbCrLf)
-        outText.Insert(strSpace + "*     " + vbCrLf)
-        outText.Insert(strSpace + "**************************************************************/" + vbCrLf)
-    End Sub
 
     ' --------------------------------------------------
     '
@@ -124,12 +95,20 @@ Public Module MyAutoCommemt  '这里要与保存的Module文件名保持一致�
         Return True
     End Function
 
+
+    Sub AddComment()
+        Dim DocSel As EnvDTE.TextSelection
+        DocSel = DTE.ActiveDocument.Selection
+        DocSel.EndOfLine()
+        ActiveDocument.Selection.Text = " /*    */"
+    End Sub
+
     ' --------------------------------------------------
     '
     ' 根据函数声明生成注释
     '
     ' --------------------------------------------------
-    Sub MakeFunctionRemark()
+    Sub FunctionRemark()
         Dim preSpaceCount As Integer = 0   ' 注释前面的空格数, 缩进（单位：字符）
         Dim outTextDoc As TextDocument
         Dim outText As EditPoint
@@ -216,4 +195,6 @@ Public Module MyAutoCommemt  '这里要与保存的Module文件名保持一致�
     End Sub
 
 
+
 End Module
+
