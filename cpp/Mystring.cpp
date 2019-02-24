@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include <string.h>
+#include <new.h>
 
 class Mystring
 {
