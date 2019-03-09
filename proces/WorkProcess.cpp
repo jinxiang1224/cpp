@@ -7,7 +7,7 @@
 *     
 *  @param : 
 *     
-*    -char* szApp    exe可执行路径
+*    -char* szApp    exe可执行文件完整路径，系统命令可以不带完整路径
 *     
 *    -char* szArg    参数，可有可无
 *     
