@@ -2,6 +2,21 @@
 #include <new>
 #include <iostream>
 
+/**************************************************************
+*  @brief : CWorkProcess::CWorkProcess
+*     
+*  @param : 
+*     
+*    -char* szApp    exe可执行路径
+*     
+*    -char* szArg    参数，可有可无
+*     
+*  @author : Jimmy
+*     
+*  @date : 2019/3/9 星期六
+*     
+*  @note : 
+***************************************************************/
 CWorkProcess::CWorkProcess(char* szApp, char* szArg):
 m_pszCmd(NULL)
 {
@@ -9,10 +24,12 @@ m_pszCmd(NULL)
     m_pi.hProcess = NULL;
     m_pi.hThread = NULL;
 
-    if ( szApp != NULL && szArg != NULL)
+    unsigned usArgLen = (szArg == NULL ? 0 : strlen(szArg)) ;
+
+    if ( szApp != NULL)
     {
         //命令行参数
-        unsigned usCmdLen = strlen(szApp) + sizeof(' ') + strlen(szArg);
+        unsigned usCmdLen = strlen(szApp) + sizeof(' ') + usArgLen;
 
         //以'\n'结束
         unsigned usBufferSize = usCmdLen + 1;
@@ -22,8 +39,12 @@ m_pszCmd(NULL)
 
         //组装命令行 0 1 2 3
         strcpy(m_pszCmd, szApp);
-        m_pszCmd[strlen(szApp)] = ' ';
-        strcat(m_pszCmd, szArg);
+
+        if (szArg != NULL)
+        {
+            m_pszCmd[strlen(szApp)] = ' ';
+            strcat(m_pszCmd, szArg);
+        }
     }
 }
 
