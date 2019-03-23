@@ -1,6 +1,7 @@
 #pragma  once
 #include <fstream>
 #include <string>
+#include "json/json.h"
 
 class CWRConfigFile
 {
@@ -9,6 +10,7 @@ public:
     ~CWRConfigFile();
     static CWRConfigFile&   GetInstance();
     void        UpdateFile(const char* szRoot, const char* szKey, const char* szValue);
+    void       AddMember(const char* szKey, const Json::Value &  newObj);
 
 private:
     bool        ReadFile();

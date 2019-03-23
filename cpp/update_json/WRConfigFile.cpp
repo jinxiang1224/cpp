@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "WRConfigFile.h"
-#include "json/json.h"
-
+/*
+note:      CWRConfigFile结构设计  AddMember and UpdateFile 有待优化
+*/
 
 CWRConfigFile::CWRConfigFile(const char * szFileName) :
 m_strFile(szFileName)
@@ -69,6 +70,23 @@ bool CWRConfigFile::WriteFile()
     return true;
 }
 
+void CWRConfigFile::AddMember(const char* szKey, const Json::Value &  newObj)
+{
+    ReadFile();
+
+    Json::Reader reader;
+    Json::StyledWriter writer;
+    Json::Value  root;
+
+    if (reader.parse(m_strContent, root))
+    {
+        root[szKey] = newObj;
+    }
+
+    m_strContent = writer.write(root);
+
+    WriteFile();
+}
 
 void CWRConfigFile::UpdateFile(const char* szRoot, const char* szKey, const char* szValue)
 {

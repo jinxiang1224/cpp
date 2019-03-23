@@ -1,1 +1,27 @@
-CWRConfigFile::GetInstance().UpdateFile("city_list", "beijing", "hst");
+// cpp_vs2013.cpp : 定义控制台应用程序的入口点。
+//
+
+#include "stdafx.h"
+#include "WRConfigFile.h"
+#include "json/json.h"
+
+
+
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+
+    CWRConfigFile::GetInstance().UpdateFile("city_list", "beijing", "hst");
+
+    Json::Value person;
+    person["name"] = "xujinxiang";
+    person["sex"] = "male";
+    person["age"] = "27";
+
+
+    CWRConfigFile::GetInstance().AddMember("person",person);
+
+
+    return 0;
+}
+
