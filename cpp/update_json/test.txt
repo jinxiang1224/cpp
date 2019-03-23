@@ -1,0 +1,1 @@
+CWRConfigFile::GetInstance().UpdateFile("city_list", "beijing", "hst");

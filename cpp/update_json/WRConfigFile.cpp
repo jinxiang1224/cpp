@@ -34,8 +34,6 @@ bool CWRConfigFile::ReadFile()
         printf("open file error...\n");
     }
 
-
-
     std::streamoff  position = m_FileStream.tellg();
     if (position != -1)
     {
