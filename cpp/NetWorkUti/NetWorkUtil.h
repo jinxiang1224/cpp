@@ -20,6 +20,8 @@ public:
     static bool isValidGateway(const std::string& pszIP);
 
     static bool isValidPort(const std::string& strPort);
+    static bool GetDnsServerIP(std::string& strPreferredDNS, std::string& strOptionalDNS);
+    static bool GetLocalIP(std::string& strIP);
 
 private:
     static bool IsValidElementIP(const std::string& strElement);

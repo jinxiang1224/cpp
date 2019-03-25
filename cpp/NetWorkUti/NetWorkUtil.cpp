@@ -1,5 +1,23 @@
+/***************************************************************
+ * Copyright(C) 2018,Company All Rights Reserved
+ * 
+ * @file    : NetWorkUtil.cpp
+ * 
+ * @brief   : 
+ * 
+ * @version : 1.0
+ * 
+ * @author  : Jimmy
+ * 
+ * @date    : 2018/12/22 星期六
+ * 
+ * Details  :
+ ***************************************************************/
+
+
 #include <winsock2.h>
 #include <iphlpapi.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "NetWorkUtil.h"
@@ -7,7 +25,8 @@
 #pragma comment(lib, "IPHLPAPI.lib")   
 #pragma comment(lib, "ws2_32.lib") 
 
-
+#define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
+#define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
 
 
 CNetWorkUtil::CNetWorkUtil()
@@ -20,6 +39,27 @@ CNetWorkUtil::~CNetWorkUtil()
 
 }
 
+
+
+/**************************************************************
+*  @brief : CNetWorkUtil::GetLocalIPList
+*     
+*  @param : 
+*     
+*    -std::vector<std::string>& vecIP
+*     
+*    -int a
+*     
+*    -int c
+*     
+*  @return : bool
+*     
+*  @author : Jimmy
+*     
+*  @date : 2018/12/30 星期日
+*     
+*  @note : 
+***************************************************************/
 bool CNetWorkUtil::GetLocalIPList(std::vector<std::string>& vecIP)
 {
     WSADATA wsaData;
@@ -49,6 +89,7 @@ bool CNetWorkUtil::GetLocalIPList(std::vector<std::string>& vecIP)
         return false;
     }
 
+    /*       */
     in_addr addr;
     int i = 0;
     //4.转化为char*并拷贝返回
@@ -71,9 +112,24 @@ bool CNetWorkUtil::GetLocalIPList(std::vector<std::string>& vecIP)
 
 }
 
+//变量或者结构体成员注释
+/* */
 
-
-//通过GetAdaptersAddresses函数（适用于Windows XP及以上版本）
+/**************************************************************
+*  @brief : CNetWorkUtil::GetLocalMACList
+*     
+*  @param : 
+*     
+*    -std::vector<std::string>& vecMac
+*     
+*  @return : bool
+*     
+*  @author : Jimmy
+*     
+*  @date : 2018/12/22 星期六
+*     
+*  @note : 通过GetAdaptersAddresses函数（适用于Windows XP及以上版本）
+***************************************************************/
 bool CNetWorkUtil::GetLocalMACList(std::vector<std::string>& vecMac)
 {
     bool ret = false;
@@ -243,6 +299,147 @@ bool CNetWorkUtil::IsValidElementIP(const std::string& strElement)
     return true;
 }
 
+bool CNetWorkUtil::GetLocalIP(std::string& strIP)
+{
+    WSADATA wsaData;
+    char szIP[50] = {};
+    bool bRet = FALSE;
 
+
+    int error = WSAStartup(0x0101, &wsaData);
+    if (error != 0)
+    {
+        return false;
+    }
+
+    char hostname[256] = {};
+    int ret = gethostname(hostname,sizeof(hostname));
+    if (ret == SOCKET_ERROR)
+    {
+        WSACleanup();
+        return false;
+    }
+
+
+    //3.获取主机ip
+    HOSTENT* host = NULL;
+    struct in_addr addr;
+    int i = 0;
+
+    //gethostbyname可能返回null，增加重试，直至解析成功
+    do
+    {
+        int nTryCount = 0;
+        host = gethostbyname(hostname);
+        if (host == NULL || nTryCount > 3)
+        {
+            Sleep(1000);
+            nTryCount++;
+        }
+        else
+        {
+            break;
+        }
+
+    } while (1);
+
+    if (NULL != host)
+    {
+        if (host->h_addrtype == AF_INET)
+        {
+            while (host->h_addr_list[i] != 0)
+            {
+                //char*转换为ulong* 转换为 long
+                addr.s_addr = *(u_long *) host->h_addr_list[i++];
+                strcpy_s(szIP,sizeof(szIP),inet_ntoa(addr));
+                strIP.assign(szIP);
+                bRet = true;
+                break;
+            }
+        }
+    }
+
+    WSACleanup();
+    return bRet;
+}
+
+
+/**************************************************************
+*  @brief : GetDnsServerIP
+*     
+*  @param : 
+*     
+*    -std::string& strPreferredDNS 首选
+*     
+*    -std::string& strOptionalDNS  备选
+*     
+*  @return : BOOL
+*     
+*  @author : jin
+*     
+*  @date : 2019/3/25
+*     
+*  @note : 获取首选DNS以及备选DNS信息
+***************************************************************/
+bool CNetWorkUtil::GetDnsServerIP(std::string& strPreferredDNS, std::string& strOptionalDNS)
+{
+    FIXED_INFO *pFixedInfo = NULL;
+    ULONG ulOutBufLen;
+    DWORD dwRetVal;
+    IP_ADDR_STRING *pIPAddr;
+
+    pFixedInfo = (FIXED_INFO *) MALLOC(sizeof (FIXED_INFO));
+    if (pFixedInfo == NULL) 
+    {
+        printf("Error allocating memory needed to call GetNetworkParams\n");
+        return false;
+    }
+
+    ulOutBufLen = sizeof (FIXED_INFO);
+
+    // Make an initial call to GetAdaptersInfo to get
+    // the necessary size into the ulOutBufLen variable
+    if (GetNetworkParams(pFixedInfo, &ulOutBufLen) == ERROR_BUFFER_OVERFLOW) 
+    {
+        FREE(pFixedInfo);
+        pFixedInfo = (FIXED_INFO *) MALLOC(ulOutBufLen);
+        if (pFixedInfo == NULL) 
+        {
+            printf("Error allocating memory needed to call GetNetworkParams\n");
+            return false;
+        }
+    }
+
+    if (dwRetVal = GetNetworkParams(pFixedInfo, &ulOutBufLen) == NO_ERROR) 
+    {
+
+        printf("Host Name: %s\n", pFixedInfo->HostName);
+        printf("Domain Name: %s\n", pFixedInfo->DomainName);
+        printf("DNS Servers:\n\t first ip %s\n", pFixedInfo->DnsServerList.IpAddress.String);
+
+        strPreferredDNS = std::string(pFixedInfo->DnsServerList.IpAddress.String);
+
+        pIPAddr = pFixedInfo->DnsServerList.Next;
+        while (pIPAddr) 
+        {
+            printf("\t second ip%s\n", pIPAddr->IpAddress.String);
+            strOptionalDNS = std::string(pIPAddr->IpAddress.String);
+            pIPAddr = pIPAddr->Next;
+        }
+    } 
+    else 
+    {
+        printf("GetNetworkParams failed with error: %d\n", dwRetVal);
+        return false;
+    }
+
+    if (pFixedInfo)
+    {
+        FREE(pFixedInfo);
+    } 
+
+    return true;
+
+}
 
 
