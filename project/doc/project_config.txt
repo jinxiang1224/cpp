@@ -1,0 +1,6 @@
+输出目录:$(SolutionDir)..\bin\
+中间目录:$(SolutionDir)..\temp\$(ProjectName)
+生成数据库文件:$(SolutionDir)..\pdb\$(TargetName).pdb
+build:relase
+优化:禁用
+lib路径设置：$(SolutionDir)..\lib\
