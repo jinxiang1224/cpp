@@ -24,6 +24,7 @@ std::wstring CAppUtil::GetPath()
     {
         wstrPath.assign(szPath);
         wstrPath = wstrPath.substr(0, wstrPath.find_last_of(_T("\\")));
+        wstrPath += _T("\\");
     }
 
     return  wstrPath;
