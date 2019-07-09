@@ -45,7 +45,7 @@
     <ClInclude Include="..\..\include\utility\CodeAssistant.h">
       <Filter>API</Filter>
     </ClInclude>
-    <ClInclude Include="MemoryHelper.h">
+    <ClInclude Include="..\..\include\utility\MemoryHelper.h">
       <Filter>API</Filter>
     </ClInclude>
   </ItemGroup>

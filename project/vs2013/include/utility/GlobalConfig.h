@@ -1,2 +1,1 @@
-#include <tchar.h>
-#define UTIL_MULTILIGNUAL   _T("UILanguage.ini")
+#define UTIL_MULTILIGNUAL   "UILanguage.ini"

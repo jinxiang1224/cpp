@@ -90,10 +90,10 @@
     <ClInclude Include="..\..\include\utility\CodeAssistant.h" />
     <ClInclude Include="..\..\include\utility\GlobalConfig.h" />
     <ClInclude Include="..\..\include\utility\IPUtil.h" />
+    <ClInclude Include="..\..\include\utility\MemoryHelper.h" />
     <ClInclude Include="..\..\include\utility\MultiLanguage.h" />
     <ClInclude Include="..\..\include\utility\utilityAPI.h" />
     <ClInclude Include="..\..\include\utility\utilityDll.h" />
-    <ClInclude Include="MemoryHelper.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>

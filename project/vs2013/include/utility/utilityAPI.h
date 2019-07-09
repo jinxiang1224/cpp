@@ -5,5 +5,6 @@
 #include "AppPath.h"
 #include "MultiLanguage.h"
 #include "IPUtil.h"
+#include "MemoryHelper.h"
 
 #endif
