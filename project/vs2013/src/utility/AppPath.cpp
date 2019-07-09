@@ -1,5 +1,9 @@
 #include"AppPath.h"
+#include <string>
 
+#include <Windows.h>
+#include <shlwapi.h>
+#pragma comment(lib,"shlwapi.lib")
 CAppPathUtil::CAppPathUtil()
 {
 }
@@ -9,17 +13,17 @@ CAppPathUtil::~CAppPathUtil()
 
 }
 
-BOOL CAppPathUtil::IsValidPath(const char* pszPath)
+bool CAppPathUtil::IsValidPath(const char* pszPath)
 {
     if (NULL == pszPath)
     {
-        return FALSE;
+        return false;
     }
-	
-    return ::PathIsDirectoryA(pszPath);
+
+    return ::PathIsDirectoryA(pszPath) ? true : false;
 }
 
-BOOL CAppPathUtil::GetAppDir(char* pszPath, unsigned nBufferLen)
+bool CAppPathUtil::GetAppDir(char* pszPath, unsigned nBufferLen)
 {
     char szPath[MAX_PATH] = {};
     std::string strPath;   
@@ -27,9 +31,10 @@ BOOL CAppPathUtil::GetAppDir(char* pszPath, unsigned nBufferLen)
     if (GetModuleFileNameA(NULL, szPath, MAX_PATH))
     {
         strPath.assign(szPath);
-        strPath = strPath.substr(0, strPath.find_last_of(("\\") + 1));
+        std::string::size_type nFindPos = strPath.find_last_of("\\");
+        strPath = strPath.substr(0, nFindPos + 1);
         strcpy_s(pszPath, nBufferLen, strPath.c_str());
     }
 
-    return  TRUE;
+    return  true;
 }
