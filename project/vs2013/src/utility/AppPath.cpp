@@ -1,31 +1,35 @@
 #include"AppPath.h"
 
-CAppUtil::CAppUtil()
+CAppPathUtil::CAppPathUtil()
 {
 }
 
-CAppUtil::~CAppUtil()
+CAppPathUtil::~CAppPathUtil()
 {
 
 }
 
-BOOL CAppUtil::IsValidPath(const std::wstring & wstrPath)
+BOOL CAppPathUtil::IsValidPath(const char* pszPath)
 {
-    return ::PathIsDirectory(wstrPath.c_str());
-}
-
-std::wstring CAppUtil::GetPath()
-{
-    TCHAR szPath[MAX_PATH];
-    std::wstring wstrPath;
-
-    ZeroMemory(szPath, sizeof(szPath));
-    if (GetModuleFileName(NULL, szPath, MAX_PATH))
+    if (NULL == pszPath)
     {
-        wstrPath.assign(szPath);
-        wstrPath = wstrPath.substr(0, wstrPath.find_last_of(_T("\\")));
-        wstrPath += _T("\\");
+        return FALSE;
+    }
+	
+    return ::PathIsDirectoryA(pszPath);
+}
+
+BOOL CAppPathUtil::GetAppDir(char* pszPath, unsigned nBufferLen)
+{
+    char szPath[MAX_PATH] = {};
+    std::string strPath;   
+
+    if (GetModuleFileNameA(NULL, szPath, MAX_PATH))
+    {
+        strPath.assign(szPath);
+        strPath = strPath.substr(0, strPath.find_last_of(("\\") + 1));
+        strcpy_s(pszPath, nBufferLen, strPath.c_str());
     }
 
-    return  wstrPath;
+    return  TRUE;
 }

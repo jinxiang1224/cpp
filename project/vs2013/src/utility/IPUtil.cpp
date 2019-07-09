@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include "IPUtil.h"
 #include <tchar.h>
+#include "CodeAssistant.h"
 #pragma comment(lib, "IPHLPAPI.lib")   
 #pragma comment(lib, "ws2_32.lib") 
 
@@ -96,14 +97,18 @@ bool CIPUtil::GetLocalHostName(char* pszHostname, unsigned uSize)
     return  ret == SOCKET_ERROR ? false : true;
 }
 
-bool  CIPUtil::GetIP(HOSTENT* host, std::vector<std::string>& vecIPlist)
+bool  CIPUtil::GetIP(HOSTENT* host, PSTRU_IP_VECTOR & pIPList)
 {
     in_addr addr;
     char szIP[50] = {};
     int i = 0;
-    vecIPlist.clear();
+    int nValidIPNumber = 0;
 
-    //4.转化为char*并拷贝返回
+    if (NULL == host)
+    {
+        return false;
+    }
+
     while (host->h_addr_list[i] != NULL)
     {
         addr.s_addr = *(u_long*)host->h_addr_list[i];
@@ -112,73 +117,35 @@ bool  CIPUtil::GetIP(HOSTENT* host, std::vector<std::string>& vecIPlist)
             break;
         }
 
-        strcpy_s(szIP, 50, inet_ntoa(addr));
-        vecIPlist.push_back(std::string(szIP));
+        nValidIPNumber += 1;
         i++;
     }
 
-    return vecIPlist.empty() ? false : true;
-}
-
-
-/**************************************************************
-*  @brief : CIPUtil::GetLocalIPList
-*
-*  @param :
-*
-*    -std::vector<std::string>& vecIP
-*
-*    -int a
-*
-*    -int c
-*
-*  @return : bool
-*
-*  @author : Jimmy
-*
-*  @date : 2018/12/30 星期日
-*
-*  @note :
-***************************************************************/
-bool CIPUtil::GetLocalIPList(std::vector<std::string>& vecIP)
-{
-    bool bRet = false;
-    char hostname[256] = {};
-    vecIP.clear();
-
-    if (!InitEnvoriment())
+    if (nValidIPNumber)
     {
-        return false;
+        int nBufferSize = sizeof(STRU_IP_VECTOR) + sizeof(STRU_IP_ADDR) * nValidIPNumber;
+        pIPList = (PSTRU_IP_VECTOR)malloc(nBufferSize);
+
+        if (pIPList)
+        {
+            memset(pIPList, 0, nBufferSize);
+            pIPList->nNum = nValidIPNumber;
+            i = 0;
+            //4.转化为char*并拷贝返回
+            while (host->h_addr_list[i] != NULL)
+            {
+                addr.s_addr = *(u_long*)host->h_addr_list[i];
+                strcpy_s(pIPList->stIPList[i].szIP, MAX_BUFFER_SIZE, inet_ntoa(addr));
+                i++;
+            }
+        }
     }
 
-    do
-    {
-        if (!GetLocalHostName(hostname, sizeof(hostname)))
-        {
-            break;
-        }
-
-        //3.获取主机ip
-        HOSTENT* host = GetHostByName(hostname);
-        if (host == NULL)
-        {
-            break;
-        }
-
-        //解析IP
-        if (!GetIP(host, vecIP))
-        {
-            break;
-        }
-
-        bRet = true;
-    } while (0);
-
-
-    UninitEnvoriment();
-
-    return bRet;
+    return nValidIPNumber != 0 ? true : false;
 }
+
+
+
 
 //变量或者结构体成员注释
 /* */
@@ -198,10 +165,11 @@ bool CIPUtil::GetLocalIPList(std::vector<std::string>& vecIP)
 *
 *  @note : 通过GetAdaptersAddresses函数（适用于Windows XP及以上版本）
 ***************************************************************/
-bool CIPUtil::GetLocalMACList(std::vector<std::string>& vecMac)
+bool CIPUtil::GetLocalMAC(char* pszMac, unsigned uBufferLen)
 {
+    CHECK_PTR_RETURN_FALSE(pszMac);
+
     bool ret = false;
-    vecMac.clear();
     ULONG outBufLen = sizeof(IP_ADAPTER_ADDRESSES);
     PIP_ADAPTER_ADDRESSES pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
     if (pAddresses == NULL)
@@ -240,8 +208,8 @@ bool CIPUtil::GetLocalMACList(std::vector<std::string>& vecMac)
                 int(pCurrAddresses->PhysicalAddress[3]),
                 int(pCurrAddresses->PhysicalAddress[4]),
                 int(pCurrAddresses->PhysicalAddress[5]));
-
-            vecMac.push_back(std::string(acMAC));
+            strcpy_s(pszMac, uBufferLen, acMAC);
+            break;
             ret = true;
         }
     }
@@ -257,16 +225,20 @@ bool CIPUtil::GetLocalMACList(std::vector<std::string>& vecMac)
 // 参  数: 	
 // 备  注：
 //********************************************
-bool CIPUtil::isValidSubmask(const std::string& strSubmask)
+bool CIPUtil::isValidSubmask(const char* szSubmask)
 {
+    if (NULL == szSubmask)
+    {
+        return false;
+    }
     //验证是否合法IP
-    if (!isValidIP(strSubmask))
+    if (!isValidIP(szSubmask))
     {
         return false;
     }
 
     //转换unsing long 整型 并且转化大端模式才符合算法要求
-    unsigned long  ulSubmask = htonl(inet_addr(strSubmask.c_str()));
+    unsigned long  ulSubmask = htonl(inet_addr(szSubmask));
 
     //取反 & (取反+1)
     //合法：11111111 11111111 11111100 00000000 11..1连续
@@ -276,18 +248,23 @@ bool CIPUtil::isValidSubmask(const std::string& strSubmask)
 }
 
 
-bool CIPUtil::isValidIP(const std::string& strIP)
+bool CIPUtil::isValidIP(const char* pszIP)
 {
+    if (NULL == pszIP)
+    {
+        return false;
+    }
+
     std::string::size_type     nBeginIndex = 0;
     std::string::size_type     nTargetIndex = 0;
-    std::string                strSubstr = strIP;
+    std::string                strSubstr(pszIP);
     std::string                strElement;
     std::vector<std::string>   vecIPElement;
 
     //192.168.245 
     do
     {
-        nTargetIndex = strSubstr.find_first_of(_T('.'));
+        nTargetIndex = strSubstr.find_first_of('.');
         if (nTargetIndex != std::string::npos)
         {
             strElement = strSubstr.substr(0, nTargetIndex);
@@ -298,7 +275,7 @@ bool CIPUtil::isValidIP(const std::string& strIP)
             strElement = strSubstr;
         }
 
-        if (!IsValidElementIP(strElement))
+        if (!IsValidElementIP(strElement.c_str()))
         {
             return false;
         }
@@ -323,17 +300,14 @@ bool CIPUtil::isValidIP(const std::string& strIP)
     return true;
 }
 
-bool CIPUtil::isValidPort(const std::string& strPort)
+bool CIPUtil::isValidPort(const char* pszPort)
 {
-    if (strPort.empty())
-    {
-        return false;
-    }
+    CHECK_PTR_RETURN_FALSE(pszPort)
 
-    size_t nLen = strPort.length();
+    size_t nLen = strlen(pszPort);
     for (size_t i = 0; i < nLen; i++)
     {
-        if (!(strPort[i] >= _T('0') && strPort[i] <= _T('9')))
+        if (!(pszPort[i] >= '0' && pszPort[i] <= '9'))
         {
             return false;
         }
@@ -343,23 +317,21 @@ bool CIPUtil::isValidPort(const std::string& strPort)
 }
 
 
-bool CIPUtil::IsValidElementIP(const std::string& strElement)
+bool CIPUtil::IsValidElementIP(const char* pszElement)
 {
-    if (strElement.empty())
-    {
-        return false;
-    }
+    
+    CHECK_PTR_RETURN_FALSE(pszElement)
 
-    size_t nsize = strElement.length();
+    size_t nsize = strlen(pszElement);
     for (size_t i = 0; i < nsize; i++)
     {
-        if (!(strElement[i] >= _T('0') && strElement[i] <= _T('9')))
+        if (!(pszElement[i] >= '0' && pszElement[i] <= '9'))
         {
             return false;
         }
     }
 
-    if (atoi(strElement.c_str()) > 255)
+    if (atoi(pszElement) > 255)
     {
         return false;
     }
@@ -367,38 +339,86 @@ bool CIPUtil::IsValidElementIP(const std::string& strElement)
     return true;
 }
 
-bool CIPUtil::GetLocalIP(std::string& strIP)
+/**************************************************************
+*  @brief : CIPUtil::GetLocalIPList
+*
+*  @return : bool
+*
+*  @author : Jimmy
+*
+*  @note :
+***************************************************************/
+bool CIPUtil::GetLocalIPList(PSTRU_IP_VECTOR & pIPList)
 {
-    char hostname[256] = {};
-
     bool bRet = false;
-
+    char hostname[256] = {};
 
     if (!InitEnvoriment())
     {
         return false;
     }
 
-    if (!GetLocalHostName(hostname, sizeof(hostname)))
+    do
     {
-        return false;
-    }
+        if (!GetLocalHostName(hostname, sizeof(hostname)))
+        {
+            break;
+        }
 
-    //3.获取主机ip
-    HOSTENT* host = GetHostByName(hostname);
-    if (NULL == host)
-    {
-        return false;
-    }
-    std::vector<std::string> vecIPlist;
-    if (!GetIP(host, vecIPlist))
-    {
-        return false;
-    }
+        //3.获取主机ip
+        HOSTENT* host = GetHostByName(hostname);
+        if (host == NULL)
+        {
+            break;
+        }
 
-    strIP = vecIPlist[0];
+        //解析IP
+        if (!GetIP(host, pIPList))
+        {
+            break;
+        }
+
+        bRet = true;
+    } while (0);
+
 
     UninitEnvoriment();
+
+    return bRet;
+}
+bool CIPUtil::GetLocalIP(char* pszIP, unsigned uSize)
+{
+    char hostname[256] = {};
+
+    bool bRet = false;
+
+    if (NULL == pszIP)
+    {
+        return false;
+    }
+
+    PSTRU_IP_VECTOR vecIPlist = NULL;
+
+    if (!GetLocalIPList(vecIPlist))
+    {
+        return false;
+    }
+
+    if (vecIPlist == NULL)
+    {
+        return false;
+    }
+
+    if (vecIPlist->nNum != 0)
+    {
+        sprintf_s(pszIP, uSize, "%s", vecIPlist->stIPList[0].szIP);
+    }
+
+    free(vecIPlist);
+    vecIPlist = NULL;
+
+    UninitEnvoriment();
+
     return true;
 }
 
@@ -420,8 +440,11 @@ bool CIPUtil::GetLocalIP(std::string& strIP)
 *
 *  @note : 获取首选DNS以及备选DNS信息
 ***************************************************************/
-bool CIPUtil::GetDnsServerIP(std::string& strPreferredDNS, std::string& strOptionalDNS)
+bool CIPUtil::GetDnsServerIP(char* pszPreferredDNS, char* pszOptionalDNS)
 {
+    CHECK_PTR_RETURN_FALSE(pszPreferredDNS);
+    CHECK_PTR_RETURN_FALSE(pszOptionalDNS);
+
     FIXED_INFO *pFixedInfo = NULL;
     ULONG ulOutBufLen;
     DWORD dwRetVal;
@@ -456,13 +479,13 @@ bool CIPUtil::GetDnsServerIP(std::string& strPreferredDNS, std::string& strOptio
         printf("Domain Name: %s\n", pFixedInfo->DomainName);
         printf("DNS Servers:\n\t first ip %s\n", pFixedInfo->DnsServerList.IpAddress.String);
 
-        strPreferredDNS = std::string(pFixedInfo->DnsServerList.IpAddress.String);
+        strcpy(pszPreferredDNS, pFixedInfo->DnsServerList.IpAddress.String);
 
         pIPAddr = pFixedInfo->DnsServerList.Next;
         while (pIPAddr)
         {
             printf("\t second ip%s\n", pIPAddr->IpAddress.String);
-            strOptionalDNS = std::string(pIPAddr->IpAddress.String);
+            strcpy(pszOptionalDNS, pIPAddr->IpAddress.String);
             pIPAddr = pIPAddr->Next;
         }
     }
@@ -481,13 +504,14 @@ bool CIPUtil::GetDnsServerIP(std::string& strPreferredDNS, std::string& strOptio
 }
 
 
-std::string CIPUtil::GetSubString(const char* pszURL,
+bool CIPUtil::GetSubString(const char* pszURL,
     const char* pszFistrPreffix,
-    const char* pszLastSuffix)
+    const char* pszLastSuffix,
+    char* pszOutString)
 {
     if (NULL == pszURL || strlen(pszURL) == 0)
     {
-        return std::string("");
+        return false;
     }
 
     std::string strSrc(pszURL);
@@ -533,6 +557,8 @@ std::string CIPUtil::GetSubString(const char* pszURL,
             strTarget = strSrc.substr(nBegin + nPreffixOffset, nSubCount);
         }
     }
-    
-    return strTarget;
+
+    strcpy(pszOutString, strTarget.c_str());
+
+    return true;
 }

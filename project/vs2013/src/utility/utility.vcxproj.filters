@@ -42,15 +42,18 @@
     <ClInclude Include="..\..\include\utility\GlobalConfig.h">
       <Filter>API</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\utility\CodeAssistant.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryHelper.h">
+      <Filter>API</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DllAPI.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="AppPath.cpp">
@@ -60,6 +63,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IPUtil.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryHelper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

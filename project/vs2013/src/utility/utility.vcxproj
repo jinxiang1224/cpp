@@ -87,17 +87,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\utility\AppPath.h" />
+    <ClInclude Include="..\..\include\utility\CodeAssistant.h" />
     <ClInclude Include="..\..\include\utility\GlobalConfig.h" />
     <ClInclude Include="..\..\include\utility\IPUtil.h" />
     <ClInclude Include="..\..\include\utility\MultiLanguage.h" />
     <ClInclude Include="..\..\include\utility\utilityAPI.h" />
     <ClInclude Include="..\..\include\utility\utilityDll.h" />
+    <ClInclude Include="MemoryHelper.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppPath.cpp" />
-    <ClCompile Include="DllAPI.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -107,6 +108,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="IPUtil.cpp" />
+    <ClCompile Include="MemoryHelper.cpp" />
     <ClCompile Include="MultiLanguage.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

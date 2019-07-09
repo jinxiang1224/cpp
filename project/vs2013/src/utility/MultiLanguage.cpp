@@ -1,4 +1,5 @@
 #include "MultiLanguage.h"
+#include "string.h"
 
 CMultiLang::CMultiLang()
 {
@@ -11,14 +12,18 @@ CMultiLang::~CMultiLang()
 
 }
 
-void CMultiLang::Init(const std::wstring & wstrCfgPath)
+bool CMultiLang::Init(const char* pszCfgPath)
 {
-    swprintf_s(m_szCfgPath, sizeof(m_szCfgPath), _T("%s"), wstrCfgPath.c_str());
+    memcpy(m_szCfgPath, pszCfgPath, sizeof(m_szCfgPath));
 
-    std::wstring strSection = GetSectionName();
-
-    swprintf_s(m_szSection, sizeof(m_szSection), _T("%s"), strSection.c_str());
-
+    DWORD nSize = ::GetPrivateProfileStringA("Configuration",
+        "section",
+        "",
+        m_szSection,
+        MAX_PATH,
+        m_szCfgPath);
+    
+    return nSize ? true : false;
 }
 
 
@@ -28,26 +33,19 @@ CMultiLang& CMultiLang::GetMultiLang()
     return  instance;
 }
 
-std::wstring CMultiLang::GetSectionName()
-{
-    TCHAR szValue[MAX_PATH];
-    ::GetPrivateProfileString(_T("Configuration"), _T("section"), _T(""), szValue, MAX_PATH
-        , m_szCfgPath);
 
-    return szValue;
-}
-
-std::wstring CMultiLang::GetStringByID(LPCTSTR strID)
+bool CMultiLang::GetStringByID(const char* szID,char* szBuffer, int nSize)
 {
-    if (NULL == strID)
+    if (NULL == szID)
     {
-        return TEXT("");
+        return false;
     }
     
-    TCHAR szValue[MAX_PATH];
-    ::GetPrivateProfileString(m_szSection, strID, _T(""), szValue, MAX_PATH
-        , m_szCfgPath);
+   ::GetPrivateProfileStringA(m_szSection, szID, "", 
+       szBuffer,
+       nSize,
+       m_szCfgPath);
 
-    return szValue;
+    return true;
 }
 
