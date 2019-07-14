@@ -1,6 +1,7 @@
 #include "WorkProcess.h"
 #include <new>
-#include <iostream>
+#include <stdio.h>
+
 
 /**************************************************************
 *  @brief : CWorkProcess::CWorkProcess
@@ -93,7 +94,7 @@ CWorkProcess::~CWorkProcess()
 *     
 *  @note : 启动一个子进程
 ***************************************************************/
-bool CWorkProcess::LaunchProcess()
+bool CWorkProcess::LaunchProcess(bool bShowWind)
 {
     if (m_pszCmd == NULL || strlen(m_pszCmd) == 0)
     {
@@ -104,6 +105,8 @@ bool CWorkProcess::LaunchProcess()
     STARTUPINFOA si;
     ZeroMemory( &si, sizeof(si) );
     si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = bShowWind ? SW_SHOW : SW_HIDE ;
 
     // Start the child process.
     if( !CreateProcessA(
@@ -119,12 +122,12 @@ bool CWorkProcess::LaunchProcess()
         &m_pi)           // Pointer to PROCESS_INFORMATION structure
         )
     {
-        std::cout << "CreateProcess failed " << GetLastError() << std::endl;
+        //std::cout << "CreateProcess failed " << GetLastError() << std::endl;
         return false;
     }
     else
     {
-        std::cout << "Successfully launched child process" << std::endl;
+        //std::cout << "Successfully launched child process" << std::endl;
     }
 
     return true;
@@ -215,7 +218,7 @@ bool CWorkProcess::StopProcess()
 }
 
 /**************************************************************
-*  @brief : CWorkProcess::Wait
+*  @brief : CWorkProcess::WaitForEnded
 *     
 *  @param : 
 *     
@@ -229,7 +232,7 @@ bool CWorkProcess::StopProcess()
 *     
 *  @note : 等待进程结束
 ***************************************************************/
-bool CWorkProcess::Wait(int nTimeout)
+bool CWorkProcess::WaitForEnded(int nTimeout)
 {
     if (m_pi.hProcess == NULL)
     {

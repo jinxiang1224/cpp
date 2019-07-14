@@ -1,6 +1,7 @@
 #pragma  once
-#include "stdafx.h"
+
 #include "Windows.h"
+#include <tchar.h>
 
 class CWorkProcess
 {
@@ -8,13 +9,13 @@ public:
     CWorkProcess(char* szApp, char* arg);
     ~CWorkProcess();
 
-    bool LaunchProcess();
+    bool LaunchProcess(bool bShowWind = false);
 
     bool CheckIfProcessIsActive();
 
     bool StopProcess();
 
-    bool Wait(int nTimeout);
+    bool WaitForEnded(int nTimeout);
 
 private:
 
