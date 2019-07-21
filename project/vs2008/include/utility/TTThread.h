@@ -39,7 +39,9 @@ public:
 
     BOOL Wait(DWORD dwWaitTime =INFINITE);
 
-    inline DWORD GetThreadID() { return m_dwThreadID; }
+    DWORD GetThreadID() { return m_dwThreadID; }
+    HANDLE GetHandle() { return m_hThread;}
+
 
 protected:
 
