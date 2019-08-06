@@ -5,10 +5,10 @@
 class UTILITY_CLASS CWorkProcess
 {
 public:
-    CWorkProcess(char* szApp, char* arg);
+    CWorkProcess(const char* szApp, char* arg);
     ~CWorkProcess();
 
-    bool LaunchProcess(bool bShowWind = false);
+    bool LaunchProcess(bool showWnd = false);
 
     bool CheckIfProcessIsActive();
 
@@ -16,8 +16,14 @@ public:
 
     bool WaitForEnded(int nTimeout);
 
+    void SetStartupInfo(const STARTUPINFOA& si);
+    
+    void SetInheritanceOpt(bool bInherit = true);
+
 private:
 
     PROCESS_INFORMATION m_pi;
+    STARTUPINFOA        m_sa;
     char*               m_pszCmd;
+    BOOL                m_bInherit;
 };

@@ -1,7 +1,6 @@
-
 #include "WorkProcess.h"
 #include <new>
-#include <stdio.h>
+#include <iostream>
 
 
 /**************************************************************
@@ -19,10 +18,13 @@
 *     
 *  @note : 
 ***************************************************************/
-CWorkProcess::CWorkProcess(char* szApp, char* szArg):
-m_pszCmd(NULL)
+CWorkProcess::CWorkProcess(const char* szApp, char* szArg):
+m_pszCmd(NULL),
+m_bInherit(FALSE)
 {
     ZeroMemory(&m_pi, sizeof(m_pi));
+    ZeroMemory(&m_sa,sizeof(m_sa));
+
     m_pi.hProcess = NULL;
     m_pi.hThread = NULL;
 
@@ -40,12 +42,12 @@ m_pszCmd(NULL)
         memset(m_pszCmd, 0, usBufferSize);
 
         //组装命令行 0 1 2 3
-        strcpy(m_pszCmd, szApp);
+        strcpy_s(m_pszCmd, usBufferSize, szApp);
 
-        if (szArg != NULL)
+        if (szArg != NULL && strlen(szArg) != 0)
         {
             m_pszCmd[strlen(szApp)] = ' ';
-            strcat(m_pszCmd, szArg);
+            strcat_s(m_pszCmd,usBufferSize, szArg);
         }
     }
 }
@@ -81,6 +83,17 @@ CWorkProcess::~CWorkProcess()
 
 }
 
+void  CWorkProcess::SetStartupInfo(const STARTUPINFOA& si)
+{
+    m_sa = si;
+    m_sa.cb = sizeof(si);
+}
+
+void CWorkProcess::SetInheritanceOpt(bool bInherit)
+{
+    m_bInherit = (bInherit ? TRUE : FALSE);
+}
+
 
 /**************************************************************
 *  @brief : CWorkProcess::LaunchProcess
@@ -95,19 +108,14 @@ CWorkProcess::~CWorkProcess()
 *     
 *  @note : 启动一个子进程
 ***************************************************************/
-bool CWorkProcess::LaunchProcess(bool bShowWind)
+bool CWorkProcess::LaunchProcess(bool showWnd)
 {
     if (m_pszCmd == NULL || strlen(m_pszCmd) == 0)
     {
         return false;
     }
 
-    // Prepare handles.
-    STARTUPINFOA si;
-    ZeroMemory( &si, sizeof(si) );
-    si.cb = sizeof(si);
-    si.dwFlags = STARTF_USESHOWWINDOW;
-    si.wShowWindow = bShowWind ? SW_SHOW : SW_HIDE ;
+    DWORD dwCreateFlag = (showWnd ? CREATE_NEW_CONSOLE : 0);
 
     // Start the child process.
     if( !CreateProcessA(
@@ -115,11 +123,11 @@ bool CWorkProcess::LaunchProcess(bool bShowWind)
         m_pszCmd,        // Command line (needs to include app path as first argument. args seperated by whitepace)
         NULL,           // Process handle not inheritable
         NULL,           // Thread handle not inheritable
-        FALSE,          // Set handle inheritance to FALSE
-        0,              // No creation flags
+        m_bInherit,          // Set handle inheritance to FALSE
+        dwCreateFlag,              // No creation flags
         NULL,           // Use parent's environment block
         NULL,           // Use parent's starting directory
-        &si,            // Pointer to STARTUPINFO structure
+        &m_sa,            // Pointer to STARTUPINFO structure
         &m_pi)           // Pointer to PROCESS_INFORMATION structure
         )
     {
@@ -240,7 +248,9 @@ bool CWorkProcess::WaitForEnded(int nTimeout)
         return false;
     }
 
-    if (WaitForSingleObject(m_pi.hProcess, nTimeout * 1000) != WAIT_OBJECT_0)
+    DWORD dwMilliSeconds = (nTimeout == INFINITE ? INFINITE : nTimeout* 1000);  
+
+    if (WaitForSingleObject(m_pi.hProcess, dwMilliSeconds) != WAIT_OBJECT_0)
     {   
         return   false;
     }
@@ -267,81 +277,79 @@ bool CWorkProcess::WaitForEnded(int nTimeout)
 *     
 *  @note :  启动一个子进程
 ***************************************************************/
-// bool  RunSubProcess(_TCHAR* szCmd, int nTimeout)
+bool  RunSubProcess(char* szCmd, int nTimeout)
+{
+
+    DWORD exitCode = (DWORD)-1;
+    bool bRet = false;
+
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory( &si, sizeof(si) );
+    si.cb = sizeof(si);
+    ZeroMemory( &pi, sizeof(pi) );
+
+    // Start the child process. 
+    if( !CreateProcessA( NULL,   // No module name (use command line)
+        szCmd,          // Command line 命令 + 空格 + 参数
+        NULL,           // Process handle not inheritable
+        NULL,           // Thread handle not inheritable
+        FALSE,          // Set handle inheritance to FALSE
+        0,              // No creation flags
+        NULL,           // Use parent's environment block
+        NULL,           // Use parent's starting directory 
+        &si,            // Pointer to STARTUPINFO structure
+        &pi )           // Pointer to PROCESS_INFORMATION structure
+        ) 
+    {
+        printf( "CreateProcess failed (%d).\n", GetLastError() );
+        return false;
+    }
+
+    //等待资金池结束
+    if (WaitForSingleObject(pi.hProcess, nTimeout * 1000) != WAIT_OBJECT_0 )
+    {
+        printf( "run cmd timt out...\n");
+        bRet = false;
+        //ExitProcess(-1);
+        //The preferred way to shut down a process is by using the ExitProcess function, 
+        //because this function sends notification of approaching termination to all DLLs attached to the process.
+        TerminateProcess(pi.hProcess, (DWORD)-1);
+    }
+    else
+    {
+        //获取子进程的退出状态
+        GetExitCodeProcess(pi.hProcess, &exitCode);
+        if (exitCode == 0)
+        {
+            printf("exit exe ok\n");
+            bRet = true;
+        } 
+        else
+        {
+            printf("exit exe error\n");
+            bRet = false;
+        }
+    }
+    //关闭系统资源
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    return bRet;
+}
+
+//for example:
+// CWorkProcess StopSrv("ping", "www.baidu.com");
+// 
+// 
+// if (!StopSrv.LaunchProcess(true))
 // {
+//     return 0;
+// }
 // 
-//     DWORD exitCode = (DWORD)-1;
-//     bool bRet = false;
-// 
-//     STARTUPINFO si;
-//     PROCESS_INFORMATION pi;
-// 
-//     ZeroMemory( &si, sizeof(si) );
-//     si.cb = sizeof(si);
-//     ZeroMemory( &pi, sizeof(pi) );
-// 
-//     // Start the child process. 
-//     if( !CreateProcess( NULL,   // No module name (use command line)
-//         szCmd,          // Command line 命令 + 空格 + 参数
-//         NULL,           // Process handle not inheritable
-//         NULL,           // Thread handle not inheritable
-//         FALSE,          // Set handle inheritance to FALSE
-//         0,              // No creation flags
-//         NULL,           // Use parent's environment block
-//         NULL,           // Use parent's starting directory 
-//         &si,            // Pointer to STARTUPINFO structure
-//         &pi )           // Pointer to PROCESS_INFORMATION structure
-//         ) 
-//     {
-//         printf( "CreateProcess failed (%d).\n", GetLastError() );
-//         return false;
-//     }
-// 
-//     //等待资金池结束
-//     if (WaitForSingleObject(pi.hProcess, nTimeout * 1000) != WAIT_OBJECT_0 )
-//     {
-//         printf( "run cmd timt out...\n");
-//         bRet = false;
-//         //ExitProcess(-1);
-//         //The preferred way to shut down a process is by using the ExitProcess function, 
-//         //because this function sends notification of approaching termination to all DLLs attached to the process.
-//         TerminateProcess(pi.hProcess, (DWORD)-1);
-//     }
-//     else
-//     {
-//         //获取子进程的退出状态
-//         GetExitCodeProcess(pi.hProcess, &exitCode);
-//         if (exitCode == 0)
-//         {
-//             printf("exit exe ok\n");
-//             bRet = true;
-//         } 
-//         else
-//         {
-//             printf("exit exe error\n");
-//             bRet = false;
-//         }
-//     }
-//     //关闭系统资源
-//     CloseHandle(pi.hProcess);
-//     CloseHandle(pi.hThread);
-// 
-//     return bRet;
+// if (!StopSrv.WaitForEnded(1))
+// {
+//     StopSrv.StopProcess();
 // }
 
-
-/*
-CWorkProcess StopSrv("ping", "www.baidu.com");
-
-
-if (!StopSrv.LaunchProcess(true))
-{
-return 0;
-}
-
-if (!StopSrv.WaitForEnded(1))
-{
-StopSrv.StopProcess();
-}
-
-*/
