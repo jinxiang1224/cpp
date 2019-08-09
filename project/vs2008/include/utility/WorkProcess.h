@@ -20,6 +20,8 @@ public:
     
     void SetInheritanceOpt(bool bInherit = true);
 
+    DWORD GetExitCode();
+
 private:
 
     PROCESS_INFORMATION m_pi;

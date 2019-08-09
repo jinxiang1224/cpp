@@ -181,6 +181,39 @@ bool CWorkProcess::CheckIfProcessIsActive()
     return false;
 }
 
+
+/**************************************************************
+*  @brief : CWorkProcess::GetExitCode
+*     
+*  @param : -none
+*     
+*  @return : DWORD
+*     
+*  @author : Jimmy
+*     
+*  @date : 2019/8/9 星期五
+*     
+*  @note : 调用WaitForEnded接口，
+          确保进程结束，然后通过GetExitCode获取退出码？
+***************************************************************/
+DWORD CWorkProcess::GetExitCode()
+ {
+     // Check if handle is closed
+     if ( m_pi.hProcess == NULL )
+     {
+         printf( "Process handle is closed or invalid (%d).\n");
+         return -1;
+     }
+
+     DWORD lpExitCode = -1;
+     if( GetExitCodeProcess(m_pi.hProcess, &lpExitCode) == 0)
+     {
+         printf( "get exit code error (%d).\n", ::GetLastError() );
+         return -1;
+     }
+
+    return lpExitCode;
+ }
 /**************************************************************
 *  @brief : CWorkProcess::StopProcess
 *     
