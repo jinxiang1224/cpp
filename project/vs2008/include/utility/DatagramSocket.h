@@ -6,6 +6,7 @@
 #ifdef WIN32
 #include <winsock2.h>
 #pragma comment(lib, "ws2_32.lib")
+#include <Ws2tcpip.h>
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -18,6 +19,13 @@
 #define FALSE 0
 #endif
 
+
+typedef struct
+{
+  bool broadcast;
+  bool reusesock;
+  bool multi_cast;
+}STRU_DATAGRAM_OPTION;
 
 //Simple socket class for datagrams.  Platform independent between
 //unix and Windows.
@@ -37,7 +45,7 @@ private:
 
 
 public:
-    DatagramSocket(int port, const char* address, bool Datagram, bool reusesock);
+    DatagramSocket(int port, const char* address, const STRU_DATAGRAM_OPTION& opt);
     ~DatagramSocket();
 
     long receive(char* msg, int msgsize);

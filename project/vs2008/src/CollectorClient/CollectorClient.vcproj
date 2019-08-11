@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="TCPServer"
-	ProjectGUID="{474572A6-A974-4B6F-9E0D-6D7DCA3EBA2E}"
-	RootNamespace="TCPServer"
+	Name="CollectorClient"
+	ProjectGUID="{57E15A6D-AA95-49F2-B70C-072AAA18DC98}"
+	RootNamespace="CollectorClient"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -114,7 +114,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\include\utility&quot;;&quot;E:\code\c++\myproject\vs2008\src\TCPServer&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\include\utility\&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -135,7 +135,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="utility.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)..\lib\"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(SolutionDir)..\pdb\$(TargetName).pdb"
 				SubSystem="1"
@@ -175,15 +175,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\ConnectThread.cpp"
+				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MonitorUserCfg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ReportMac.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\stdafx.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TCPServer.cpp"
 				>
 			</File>
 		</Filter>
@@ -193,7 +197,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ConnectThread.h"
+				RelativePath=".\MonitorUserCfg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ReportMac.h"
 				>
 			</File>
 			<File

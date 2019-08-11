@@ -1,0 +1,2 @@
+client: read data from pipe : 1123456
+client: write data to pipe : I receive data '1123456'

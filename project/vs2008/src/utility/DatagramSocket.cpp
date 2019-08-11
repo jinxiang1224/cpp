@@ -4,7 +4,7 @@
 typedef int socklen_t;
 #endif
 
-DatagramSocket::DatagramSocket(int port, const char* address, bool broadcast, bool reusesock)
+DatagramSocket::DatagramSocket(int port, const char* address, const STRU_DATAGRAM_OPTION& opt)
 {
 #ifdef WIN32
     retval = WSAStartup(MAKEWORD(2,2),&wsaData);
@@ -12,6 +12,8 @@ DatagramSocket::DatagramSocket(int port, const char* address, bool broadcast, bo
 
     sockaddr_in addr;
     sock = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
+
+    struct ip_mreq mreq; 
 
     //set up bind address
     memset(&addr,0,sizeof(addr));
@@ -32,19 +34,28 @@ DatagramSocket::DatagramSocket(int port, const char* address, bool broadcast, bo
     int OptVal = 1;
 #endif
 
-    if (broadcast)
+    if (opt.broadcast)
 #ifdef WIN32
         retval = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char*)&bOptVal, bOptLen);
 #else
         retval = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &OptVal, sizeof(OptVal));
 #endif
 
-    if (reusesock)
+    if (opt.reusesock)
 #ifdef WIN32
         retval = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&bOptVal, bOptLen);
 #else
         retval = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &OptVal, sizeof(OptVal));
 #endif
+
+
+    if (opt.multi_cast)
+    {
+        /* use setsockopt() to request that the kernel join a multicast group */    
+        mreq.imr_multiaddr.s_addr=inet_addr(address);    
+        mreq.imr_interface.s_addr=htonl(INADDR_ANY);
+        setsockopt(sock,IPPROTO_IP,IP_ADD_MEMBERSHIP,(char *)&mreq,sizeof(mreq)); 
+    }
 
     retval = bind(sock,(struct sockaddr *)&addr,sizeof(addr));
 }

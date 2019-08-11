@@ -4,22 +4,18 @@
 #include "stdafx.h"
 #include <WinSock2.h>
 #include <stdlib.h>
+#include <Ws2tcpip.h>
 
 #pragma comment(lib, "ws2_32.lib")
 
-
 int _tmain(int argc, _TCHAR* argv[])
 {
-	
     int iResult = 0;
+    const int BufLen = 1024;
+    char RecvBuf[BufLen];
 
     WSADATA wsaData;
-
     SOCKET RecvSocket;
-
-
-    char RecvBuf[1024];
-    int BufLen = 1024;
 
     sockaddr_in SenderAddr;
     int SenderAddrSize = sizeof (SenderAddr);
@@ -32,7 +28,6 @@ int _tmain(int argc, _TCHAR* argv[])
         printf("WSAStartup failed with error %d\n", iResult);
         return 1;
     }
-    //-----------------------------------------------
     // Create a receiver socket to receive datagrams
     RecvSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (RecvSocket == INVALID_SOCKET) 
@@ -59,7 +54,16 @@ int _tmain(int argc, _TCHAR* argv[])
         return 1;
     }
 
-    //-----------------------------------------------
+//     //加入多播组
+//     struct ip_mreq stMreq;
+//     //IP multicast address of group
+//     stMreq.imr_multiaddr.s_addr = inet_addr("239.1.100.1");
+//     //Local IP address of interface
+//     stMreq.imr_interface.s_addr=htonl(INADDR_ANY);
+// 
+//     setsockopt(RecvSocket,IPPROTO_IP,IP_ADD_MEMBERSHIP,(char *)&stMreq,sizeof(stMreq)); 
+
+
     // Call the recvfrom function to receive datagrams
     // on the bound socket.
     char szMsgData[128] = {};
@@ -77,32 +81,47 @@ int _tmain(int argc, _TCHAR* argv[])
         else
         {
             printf("client->server:%s\n",RecvBuf);
+
+            int nSendSize = sendto(RecvSocket,"i received",strlen("i received"),0,(sockaddr*)&SenderAddr,SenderAddrSize);
+            if (nSendSize <= 0)
+            {
+                printf("send data error...\n");
+            }
         }
 
-        printf("pls input msg...:\n");
+         if (strlen(RecvBuf) == 1 && 'q' == RecvBuf[0])
+         {
+             break;
+         }
 
-        gets_s(szMsgData, sizeof(szMsgData));
-
-        if (strlen(szMsgData) == 1 && 'q' == szMsgData[0])
-        {
-            break;
-        }
-
-        int nSendSize = sendto(RecvSocket,szMsgData,strlen(szMsgData),0,(sockaddr*)&SenderAddr,SenderAddrSize);
-        if (nSendSize > 0)
-        {
-            printf("server->client:%s\n",szMsgData);
-        }
-        else
-        {
-            printf("send data error...\n");
-        }
+//         printf("pls input msg...:\n");
+// 
+//         gets_s(szMsgData, sizeof(szMsgData));
+// 
+//         if (strlen(szMsgData) == 1 && 'q' == szMsgData[0])
+//         {
+//             break;
+//         }
+// 
+//          int nSendSize = sendto(RecvSocket,RecvBuf,strlen(RecvBuf),0,(sockaddr*)&SenderAddr,SenderAddrSize);
+//          if (nSendSize > 0)
+//          {
+//              printf("server->client:%s\n",RecvBuf);
+//          }
+//          else
+//          {
+//              printf("send data error...\n");
+//         }
     }
 
 
-    //-----------------------------------------------
     // Close the socket when finished receiving datagrams
+
     printf("Finished receiving. Closing socket.\n");
+
+    //结束后退出组播地址
+    //setsockopt(RecvSocket,IPPROTO_IP,IP_DROP_MEMBERSHIP,(char *)&stMreq,sizeof(stMreq)); 
+
     if (closesocket(RecvSocket) == SOCKET_ERROR) 
     {
         printf("closesocket failed with error %d\n", WSAGetLastError());
