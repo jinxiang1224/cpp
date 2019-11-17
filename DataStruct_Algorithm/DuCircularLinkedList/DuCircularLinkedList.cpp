@@ -30,19 +30,24 @@ int InitDuLinkList(DuLNodeInfo& ListInfo)
 /*获取尾部结点*/
 PDuLNode GetTailNode(const DuLNodeInfo& ListInfo)
 {
-    return ListInfo.pHead->prev;
+    return ListInfo.pHead != NULL ? ListInfo.pHead->prev : NULL;
 }
 
 /*获取第一个结点*/
 PDuLNode GetHeadNode(const DuLNodeInfo& ListInfo)
 {
-    return ListInfo.pHead->next;
+    return ListInfo.pHead != NULL ? ListInfo.pHead->next : NULL;
 }
 
 /*置空单链表，保留头结点*/
 int ClearDuLinkList(DuLNodeInfo& ListInfo)
 {
     PDuLNode CurNode = GetHeadNode(ListInfo);
+    if (CurNode == NULL)
+    {
+        return DA_SUCCESS;
+    }
+
     PDuLNode NextNode = NULL;
     while(CurNode != ListInfo.pHead)
     {
@@ -59,13 +64,22 @@ int ClearDuLinkList(DuLNodeInfo& ListInfo)
     return DA_SUCCESS;
 }
 
+void SafeFreeHead(DuLNodeInfo& ListInfo)
+{
+    if (ListInfo.pHead != NULL)
+    {
+        free(ListInfo.pHead);
+        ListInfo.pHead = NULL;
+    }
+
+    ListInfo.nLenth = 0;
+}
 /*销毁链表*/
 int DestoryDuLinkList(DuLNodeInfo& ListInfo)
 {
     ClearDuLinkList(ListInfo);
 
-    free(ListInfo.pHead);
-    ListInfo.pHead = NULL;
+    SafeFreeHead(ListInfo);
 
     return DA_SUCCESS;
 }
@@ -76,7 +90,7 @@ int GetDuListLen(DuLNodeInfo& Head)
 }
 
 /*添加一个结点*/
-int AddNode(PDuLNode newnode, PDuLNode pre, PDuLNode next)
+int _AddNode(PDuLNode newnode, PDuLNode pre, PDuLNode next)
 {
     printf("add node =%d\n",newnode->data);
 
@@ -89,8 +103,14 @@ int AddNode(PDuLNode newnode, PDuLNode pre, PDuLNode next)
     return DA_SUCCESS;
 }
 
+int ListAddNode(DuLNodeInfo& ListInfo,PDuLNode newnode, PDuLNode pre, PDuLNode next)
+{
+   ListInfo.nLenth++;
+   return _AddNode(newnode,pre,next);
+}
+
 /*将当前结点从链表中删除*/
-int DelNode(PDuLNode delNode)
+int _DelNode(PDuLNode delNode)
 {
     printf("delete node =%d\n",delNode->data);
 
@@ -103,15 +123,20 @@ int DelNode(PDuLNode delNode)
     return DA_SUCCESS;
 }
 
+int ListDelNode(DuLNodeInfo& ListInfo,PDuLNode delNode)
+{
+    ListInfo.nLenth--;
+    return _DelNode(delNode);
+}
+
 /*追加结点*/
 int InsertAfterLinkList(DuLNodeInfo& ListInfo, NodeType data)
 {
     PDuLNode NewNode = (PDuLNode)malloc(sizeof(DuLNode));
     CHECK_PTR_RETURN_ERROR(NewNode);
     NewNode->data = data;
-    ListInfo.nLenth++;
 
-    return AddNode(NewNode,ListInfo.pHead->prev, ListInfo.pHead);
+    return ListAddNode(ListInfo,NewNode,ListInfo.pHead->prev, ListInfo.pHead);
 }
 
 /*在头结点后插入*/
@@ -120,41 +145,74 @@ int InsertBeforeLinkList(DuLNodeInfo& ListInfo, NodeType data)
     PDuLNode NewNode = (PDuLNode)malloc(sizeof(DuLNode));
     CHECK_PTR_RETURN_ERROR(NewNode);
     NewNode->data = data;
-    ListInfo.nLenth++;
-    return AddNode(NewNode, ListInfo.pHead, ListInfo.pHead->next);
+    return ListAddNode(ListInfo,NewNode, ListInfo.pHead, ListInfo.pHead->next);
 }
 
 
 /*删除结点并释放资源*/
 int DelDuLinkListNode(DuLNodeInfo& ListInfo,PDuLNode& delnode)
 {
-    DelNode(delnode);
+    ListDelNode(ListInfo,delnode);
     free(delnode);
     delnode = NULL;
-
-    ListInfo.nLenth--;
     return DA_SUCCESS;
 }
 
 /*链表查找*/
-int FindDuLinkListNode(DuLNodeInfo& ListInfo, PDuLNode& FindNode,NodeType DataValue)
+PDuLNode FindDuLinkListNode(DuLNodeInfo& ListInfo,NodeType DataValue)
 {
     PDuLNode curNode = GetHeadNode(ListInfo);
-    int bRet = DA_ERROR;
+    PDuLNode FindNode = NULL;
 
     while (curNode != ListInfo.pHead && curNode != NULL)
     {
         if (curNode->data == DataValue)
         {
             FindNode = curNode;
-            bRet = DA_SUCCESS;
             break;
         }
         curNode = curNode->next;
     }
 
-    return bRet;
+    return FindNode;
 }
+int UnionDuLinkList(DuLNodeInfo& ListInfo1, DuLNodeInfo& ListInfo2)
+{
+
+    if (ListInfo1.nLenth == 0)
+    {
+        DuLNodeInfo ListInfo = ListInfo1;
+        ListInfo1 = ListInfo2;
+        ListInfo1 = ListInfo;
+    }
+    else
+    {
+        PDuLNode curNode = GetHeadNode(ListInfo2);
+        PDuLNode FindNode = NULL;
+        PDuLNode NextNode = NULL;
+        /*遍历list2结点 O(M)*/
+        while (curNode != ListInfo2.pHead)
+        {
+            NextNode = curNode->next;
+            //不存在的则插入list1，否则从list2中删除
+            //查找的时间复杂度为O(n)
+            if (NULL != FindDuLinkListNode(ListInfo1,curNode->data))
+            {
+                DelDuLinkListNode(ListInfo2, curNode);
+            }
+            else
+            {
+                ListDelNode(ListInfo2,curNode);
+
+                ListAddNode(ListInfo1,curNode,ListInfo1.pHead->prev,ListInfo1.pHead);
+            }
+            curNode = NextNode;
+        }
+    }
+
+    return DA_SUCCESS;
+}
+
 
 /*链表打印*/
 int PrintDuLinkList(DuLNodeInfo& ListInfo, bool bReverse/* = false*/)
@@ -173,7 +231,7 @@ int PrintDuLinkList(DuLNodeInfo& ListInfo, bool bReverse/* = false*/)
     }
 
     //结束条件为是否等于头结点
-    while(CurNode != ListInfo.pHead)
+    while(CurNode != ListInfo.pHead && CurNode != NULL)
     {
         printf("%d->",CurNode->data);
         CurNode = (bReverse ? CurNode->prev : CurNode->next);
@@ -186,32 +244,43 @@ int PrintDuLinkList(DuLNodeInfo& ListInfo, bool bReverse/* = false*/)
 
 void TestDuLinkList()
 {
-    DuLNodeInfo head;
-    InitDuLinkList(head);
-    PrintDuLinkList(head);
-    InsertBeforeLinkList(head,4);
-    InsertAfterLinkList(head,1);
-    InsertAfterLinkList(head,2);
-    InsertBeforeLinkList(head,3);
+    DuLNodeInfo List1;
+    DuLNodeInfo List2;
+    InitDuLinkList(List1);
+    InitDuLinkList(List2);
 
-    PrintDuLinkList(head);
+    InsertBeforeLinkList(List1,4);
+    InsertAfterLinkList(List1,1);
+    InsertAfterLinkList(List1,2);
+    InsertAfterLinkList(List1,3);
 
+    PrintDuLinkList(List1);
+
+    /*
     PDuLNode FindNode = NULL;
-    if (FindDuLinkListNode(head,FindNode,1) == DA_SUCCESS)
+    if (FindDuLinkListNode(List1,FindNode,1) == DA_SUCCESS)
     {
-        DelDuLinkListNode(head,FindNode);
+        DelDuLinkListNode(List1,FindNode);
     }
-    PrintDuLinkList(head, true);
+    PrintDuLinkList(List1, true);
+    */
 
-    ClearDuLinkList(head);
 
-    PrintDuLinkList(head);
+    InsertBeforeLinkList(List2,1);
+    InsertBeforeLinkList(List2,2);
+    InsertBeforeLinkList(List2,32);
+    PrintDuLinkList(List2);
 
-    InsertBeforeLinkList(head,1);
-    InsertBeforeLinkList(head,2);
-    InsertBeforeLinkList(head,3);
+    UnionDuLinkList(List1, List2);
+    printf("union link list:");
+    PrintDuLinkList(List1);
 
-    PrintDuLinkList(head);
+    InsertBeforeLinkList(List2,11);
+    InsertBeforeLinkList(List2,2);
+    InsertBeforeLinkList(List2,32);
+    PrintDuLinkList(List2);
 
-    DestoryDuLinkList(head);
+
+    DestoryDuLinkList(List1);
+    DestoryDuLinkList(List2);
 }
