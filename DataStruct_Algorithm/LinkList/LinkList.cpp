@@ -333,56 +333,71 @@ int ReverseLinkList2(PLinkLNode *LinkHead)
     return DA_SUCCESS;
 }
 
-
-void Test_LinkList()
+int MergerList(PLinkLNode& ha,PLinkLNode& hb, PLinkLNode& hc)
 {
-    PLinkLNode Head = NULL;
-    
-    Init_LinkList(&Head);
-
-    if (IsEmpty_LinkList(Head))
+    CHECK_PTR_RETURN_ERROR(ha);
+    CHECK_PTR_RETURN_ERROR(hb);
+    CHECK_PTR_RETURN_ERROR(hc);
+    PLinkLNode CurNodeA = ha;
+    PLinkLNode CurNodeB = hb;
+    //O(n)=Min(m,n);
+    while (CurNodeA->pNext != NULL && CurNodeB->pNext != NULL)
     {
-        printf("link list is empty\n");
+       CurNodeA = CurNodeA->pNext ;
+       CurNodeB = CurNodeB->pNext;
     }
 
-    InsertNodeByHead(Head,1);
-    InsertNodeByHead(Head,2);
-    InsertNodeByHead(Head,3);
-    InsertNodeByHead(Head,4);
-
-    PrintLinkList(Head);
-
-    Clear_LinkList(Head);
-    printf("clear list\n");
-    InsertNodeByTail(Head,10);
-    InsertNodeByTail(Head,20);
-
-    PrintLinkList(Head);
-
-    DataType DataValue = 0;
-    
-    if (DA_SUCCESS != DeleteNode_LinkList(Head, 1,&DataValue))
+    //长链表链接在短后面
+    if (CurNodeA->pNext != NULL)
     {
-        printf("delete node error ...\n");
-    } 
+        //ha长
+        CurNodeB->pNext = ha->pNext;
+        //新链表
+        hc->pNext = hb->pNext;
+    }
     else
     {
-        printf("delete data %d\n",DataValue);
-        PrintLinkList(Head);
+        //hb长 
+        CurNodeA->pNext = hb->pNext;
+        hc->pNext = ha->pNext;
     }
 
-    InsertNode_LinkList(Head,0,110);
-    InsertNode_LinkList(Head,1,1100);
-
-    PrintLinkList(Head);
+    //hb空表
+    hb->pNext = NULL;
+    //ha空表
+    ha->pNext = NULL;
     
-    ReverseLinkList(&Head);
+    return DA_SUCCESS;
+}
 
-    PrintLinkList(Head);
 
-    ReverseLinkList2(&Head);
+void test_single_linklist()
+{
+    PLinkLNode Head1 = NULL;
+    PLinkLNode Head2 = NULL;
+    
+    Init_LinkList(&Head1);
+    Init_LinkList(&Head2);
 
-    PrintLinkList(Head);
 
-    Destory_LinkList(&Head);
+    InsertNodeByHead(Head1,1);
+    InsertNodeByHead(Head1,2);
+    InsertNodeByHead(Head1,3);
+    PrintLinkList(Head1);
+
+    InsertNodeByTail(Head2,10);
+    InsertNodeByTail(Head2,20);
+    PrintLinkList(Head2);
+
+    PLinkLNode Head3 = NULL;
+    Init_LinkList(&Head3);
+
+
+    MergerList(Head1,Head2,Head3);
+    PrintLinkList(Head3);
+
+
+    Destory_LinkList(&Head2);
+    Destory_LinkList(&Head1);
+    Destory_LinkList(&Head3);
 }

@@ -54,7 +54,9 @@ int PrintLinkList(PLinkLNode LinkHead);
 /*·­×ªÁ´±í*/
 int ReverseLinkList(PLinkLNode* LinkHead);
 
+int MergerList(PLinkLNode& ha,PLinkLNode& hb, PLinkLNode& hc);
 
-void Test_LinkList();
+
+void test_single_linklist();
 
 #endif
